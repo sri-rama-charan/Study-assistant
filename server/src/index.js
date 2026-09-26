@@ -135,10 +135,22 @@ Formatting rules:
 
     const rawResponse = chatCompletion.choices[0]?.message?.content || '';
 
-    // Return the raw model response as JSON
+    // Parse the raw JSON string from Groq into a JavaScript object
+    let parsedQuiz;
+    try {
+      parsedQuiz = JSON.parse(rawResponse);
+    } catch (parseError) {
+      console.error('JSON parsing error:', parseError);
+      return res.status(500).json({
+        success: false,
+        error: 'AI returned invalid JSON',
+      });
+    }
+
+    // Return the parsed quiz object to React
     return res.status(200).json({
       success: true,
-      rawResponse,
+      quiz: parsedQuiz,
     });
   } catch (error) {
     console.error('Groq generation error:', error);
