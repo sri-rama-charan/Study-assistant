@@ -64,6 +64,70 @@ app.get('/api/health', (req, res) => {
  * - correctAnswer must match one option ID
  * - explanation must be a non-empty string
  */
+
+// JSON Schema definition for quiz Structured Outputs
+const quizSchema = {
+  type: 'object',
+  properties: {
+    title: {
+      type: 'string',
+      description: 'The title of the quiz topic',
+    },
+    questions: {
+      type: 'array',
+      description: 'List of exactly 5 quiz questions',
+      minItems: 5,
+      maxItems: 5,
+      items: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            description: 'Unique identifier for the question',
+          },
+          question: {
+            type: 'string',
+            description: 'The question text',
+          },
+          options: {
+            type: 'array',
+            description: 'List of exactly 4 choices',
+            minItems: 4,
+            maxItems: 4,
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  description: 'Option identifier (e.g. a, b, c, or d)',
+                },
+                text: {
+                  type: 'string',
+                  description: 'The option display text',
+                },
+              },
+              required: ['id', 'text'],
+              additionalProperties: false,
+            },
+          },
+          correctAnswer: {
+            type: 'string',
+            description: 'The option ID that represents the correct answer',
+          },
+          explanation: {
+            type: 'string',
+            description: 'Explanation for why the correct answer is right',
+          },
+        },
+        required: ['id', 'question', 'options', 'correctAnswer', 'explanation'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['title', 'questions'],
+  additionalProperties: false,
+};
+
 // Quiz generation endpoint - calls Groq to get raw model response
 app.post('/api/generate-quiz', async (req, res) => {
   const { topic, difficulty } = req.body || {};
@@ -144,6 +208,94 @@ Formatting rules:
       return res.status(500).json({
         success: false,
         error: 'AI returned invalid JSON',
+      });
+    }
+
+    // Basic root-level validation for the parsed quiz
+    const isValidRoot =
+      parsedQuiz &&
+      typeof parsedQuiz === 'object' &&
+      !Array.isArray(parsedQuiz) &&
+      typeof parsedQuiz.title === 'string' &&
+      parsedQuiz.title.trim() !== '' &&
+      Array.isArray(parsedQuiz.questions) &&
+      parsedQuiz.questions.length === 5;
+
+    if (!isValidRoot) {
+      console.error('AI returned an invalid quiz root structure:', parsedQuiz);
+      return res.status(500).json({
+        success: false,
+        error: 'AI returned an invalid quiz structure',
+      });
+    }
+
+    // Validate the structure of each question
+    const areQuestionsValid = parsedQuiz.questions.every((q) => {
+      return (
+        q &&
+        typeof q === 'object' &&
+        !Array.isArray(q) &&
+        typeof q.id === 'string' &&
+        q.id.trim() !== '' &&
+        typeof q.question === 'string' &&
+        q.question.trim() !== '' &&
+        Array.isArray(q.options) &&
+        q.options.length === 4 &&
+        typeof q.correctAnswer === 'string' &&
+        q.correctAnswer.trim() !== '' &&
+        typeof q.explanation === 'string' &&
+        q.explanation.trim() !== ''
+      );
+    });
+
+    if (!areQuestionsValid) {
+      console.error('AI returned an invalid question structure:', parsedQuiz.questions);
+      return res.status(500).json({
+        success: false,
+        error: 'AI returned an invalid quiz structure',
+      });
+    }
+
+    // Validate options and correctAnswer for every question
+    const areOptionsAndAnswersValid = parsedQuiz.questions.every((q) => {
+      // 1. Validate each option structure
+      const areOptionsWellFormed = q.options.every((opt) => {
+        return (
+          opt &&
+          typeof opt === 'object' &&
+          !Array.isArray(opt) &&
+          typeof opt.id === 'string' &&
+          opt.id.trim() !== '' &&
+          typeof opt.text === 'string' &&
+          opt.text.trim() !== ''
+        );
+      });
+
+      if (!areOptionsWellFormed) {
+        return false;
+      }
+
+      // 2. Validate that option IDs are unique (4 options must yield 4 unique IDs)
+      const optionIds = q.options.map((opt) => opt.id.trim());
+      const uniqueOptionIds = new Set(optionIds);
+      if (uniqueOptionIds.size !== 4) {
+        return false;
+      }
+
+      // 3. Validate that correctAnswer matches exactly one option ID
+      const trimmedCorrectAnswer = q.correctAnswer.trim();
+      if (!optionIds.includes(trimmedCorrectAnswer)) {
+        return false;
+      }
+
+      return true;
+    });
+
+    if (!areOptionsAndAnswersValid) {
+      console.error('AI returned invalid options or correctAnswer:', parsedQuiz.questions);
+      return res.status(500).json({
+        success: false,
+        error: 'AI returned an invalid quiz structure',
       });
     }
 
