@@ -151,15 +151,15 @@ app.post('/api/generate-quiz', async (req, res) => {
     });
   }
 
-  // Prompt instructing Groq to return ONLY valid JSON matching the quiz contract
+  // Prompt instructing Groq to return ONLY valid JSON matching the quiz contract with content-quality guidelines
   const prompt = `You are a quiz generator. Generate a study quiz about the topic "${topic.trim()}" at ${normalizedDifficulty} difficulty.
 
 Follow these strict requirements:
 1. Generate exactly 5 questions.
 2. Generate exactly 4 options per question.
-3. Each question must have one correct answer.
+3. Each question must have exactly ONE clearly correct answer.
 4. correctAnswer must contain the ID of the correct option.
-5. Include an explanation for every question.
+5. Include a clear explanation for every question that explains why the correctAnswer is right and does not contradict the question or answer.
 6. Return ONLY valid JSON matching this exact structure:
 {
   "title": "Topic Title",
@@ -179,6 +179,23 @@ Follow these strict requirements:
   ]
 }
 
+Content Quality Rules:
+- Questions must be factually accurate and appropriate for the requested topic.
+- Questions must genuinely test the requested topic rather than loosely related concepts.
+- Each question must have exactly ONE unambiguous, clearly correct answer.
+- All incorrect options must be clearly incorrect for the question.
+- Avoid ambiguous or debatable questions.
+- The explanation must correctly explain why the selected correctAnswer is correct and must not contradict the question or its correct answer.
+- Match the requested difficulty:
+  * easy: fundamental concepts
+  * medium: conceptual understanding and practical application
+  * hard: deeper reasoning, edge cases, or code-based scenarios
+- Before returning the final JSON, internally verify:
+  * each question has one unambiguous correct answer
+  * correctAnswer matches that answer
+  * the explanation supports that answer
+  * all questions are relevant to the requested topic and difficulty
+
 Formatting rules:
 - Return ONLY JSON.
 - Do not use Markdown.
@@ -186,7 +203,7 @@ Formatting rules:
 - Do not include any text before or after the JSON.`;
 
   try {
-    // Call Groq API
+    // Call Groq API with Structured Outputs
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
@@ -195,6 +212,14 @@ Formatting rules:
         },
       ],
       model: 'openai/gpt-oss-20b',
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'quiz',
+          strict: true,
+          schema: quizSchema,
+        },
+      },
     });
 
     const rawResponse = chatCompletion.choices[0]?.message?.content || '';
