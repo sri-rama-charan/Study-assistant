@@ -1,21 +1,8 @@
 import { generateQuiz } from '../services/quizService.js';
 
-/**
- * Controller for POST /api/generate-quiz endpoint.
- *
- * Responsibilities:
- * - Read and validate request body parameters (topic, difficulty)
- * - Normalize parameters
- * - Delegate quiz generation to quizService
- * - Return HTTP responses
- *
- * @param {import('express').Request} req
- * @param {import('express').Response} res
- */
 export async function generateQuizController(req, res) {
   const { topic, difficulty } = req.body || {};
 
-  // Validate topic
   if (!topic || typeof topic !== 'string' || topic.trim() === '') {
     return res.status(400).json({
       success: false,
@@ -23,7 +10,6 @@ export async function generateQuizController(req, res) {
     });
   }
 
-  // Validate difficulty
   const allowedDifficulties = ['easy', 'medium', 'hard'];
   const normalizedDifficulty = typeof difficulty === 'string' ? difficulty.trim().toLowerCase() : '';
 
@@ -37,7 +23,6 @@ export async function generateQuizController(req, res) {
   try {
     const quiz = await generateQuiz(topic.trim(), normalizedDifficulty);
 
-    // Return the validated quiz object to React
     return res.status(200).json({
       success: true,
       quiz,

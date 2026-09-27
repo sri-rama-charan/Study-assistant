@@ -12,7 +12,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export async function generateQuiz({ topic, difficulty }) {
   let response;
 
-  // 1. Perform network request
   try {
     response = await fetch(`${API_BASE_URL}/api/generate-quiz`, {
       method: 'POST',
@@ -32,7 +31,6 @@ export async function generateQuiz({ topic, difficulty }) {
     throw error;
   }
 
-  // 2. Parse response JSON
   let data;
   try {
     data = await response.json();
@@ -43,7 +41,6 @@ export async function generateQuiz({ topic, difficulty }) {
     throw error;
   }
 
-  // 3. Detect unsuccessful HTTP responses or failure flags
   if (!response.ok || data?.success === false) {
     const rawMessage =
       typeof data?.error === 'string' && data.error.trim()
@@ -56,7 +53,6 @@ export async function generateQuiz({ topic, difficulty }) {
     throw error;
   }
 
-  // 4. Validate presence of a usable quiz object
   const quizData = data?.quiz || (data?.questions ? data : null);
   if (
     !quizData ||
@@ -70,6 +66,5 @@ export async function generateQuiz({ topic, difficulty }) {
     throw error;
   }
 
-  // 5. Return successful payload
   return data;
 }

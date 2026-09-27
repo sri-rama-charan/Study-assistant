@@ -21,7 +21,6 @@
  * @returns {boolean} - true if quiz passes all validation rules, false otherwise
  */
 export function validateQuiz(quiz) {
-  // 1. Root-level validation
   const isValidRoot =
     quiz &&
     typeof quiz === 'object' &&
@@ -35,7 +34,6 @@ export function validateQuiz(quiz) {
     return false;
   }
 
-  // 2. Question-level structure validation
   const areQuestionsValid = quiz.questions.every((q) => {
     return (
       q &&
@@ -58,9 +56,7 @@ export function validateQuiz(quiz) {
     return false;
   }
 
-  // 3. Options and correctAnswer validation
   const areOptionsAndAnswersValid = quiz.questions.every((q) => {
-    // Validate each option structure
     const areOptionsWellFormed = q.options.every((opt) => {
       return (
         opt &&
@@ -77,14 +73,12 @@ export function validateQuiz(quiz) {
       return false;
     }
 
-    // Validate that option IDs are unique (4 options must yield 4 unique IDs)
     const optionIds = q.options.map((opt) => opt.id.trim());
     const uniqueOptionIds = new Set(optionIds);
     if (uniqueOptionIds.size !== 4) {
       return false;
     }
 
-    // Validate that correctAnswer matches exactly one option ID
     const trimmedCorrectAnswer = q.correctAnswer.trim();
     if (!optionIds.includes(trimmedCorrectAnswer)) {
       return false;

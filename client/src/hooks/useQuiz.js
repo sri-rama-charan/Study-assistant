@@ -25,7 +25,6 @@ export function useQuiz(quiz) {
   const isLastQuestion = totalQuestions > 0 && currentQuestionIndex === totalQuestions - 1;
   const selectedAnswer = currentQuestion ? selectedAnswers[currentQuestion.id] || null : null;
 
-  // Handle option selection for the active question
   const selectAnswer = (optionId) => {
     if (!currentQuestion) return;
 
@@ -35,7 +34,6 @@ export function useQuiz(quiz) {
     }));
   };
 
-  // Move to next question or compute score and show result
   const nextQuestion = () => {
     if (!selectedAnswer) return;
 
@@ -51,7 +49,6 @@ export function useQuiz(quiz) {
     }
   };
 
-  // Reset quiz progress for a fresh attempt without re-fetching
   const tryAgain = () => {
     setCurrentQuestionIndex(0);
     setSelectedAnswers({});
@@ -60,12 +57,10 @@ export function useQuiz(quiz) {
     setShowReview(false);
   };
 
-  // Open the answer review screen
   const openReview = () => {
     setShowReview(true);
   };
 
-  // Return to the result screen from review
   const backToResult = () => {
     setShowReview(false);
   };

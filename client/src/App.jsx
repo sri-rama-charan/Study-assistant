@@ -5,23 +5,19 @@ import { generateQuiz } from './services/quizApi';
 import { sanitizeErrorMessage } from './utils/errorUtils';
 
 function App() {
-  // Input state
   const [topic, setTopic] = useState('');
   const [difficulty, setDifficulty] = useState('medium');
 
-  // UI / Network state
   const [validationError, setValidationError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [quiz, setQuiz] = useState(null);
   const [apiError, setApiError] = useState('');
 
-  // Handle topic change and clear validation warning if any
   const handleTopicChange = (newTopic) => {
     setTopic(newTopic);
     if (validationError) setValidationError('');
   };
 
-  // Reset all state to start a new quiz
   const handleReset = () => {
     setQuiz(null);
     setTopic('');
@@ -29,19 +25,15 @@ function App() {
     setValidationError('');
   };
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Prevent multiple requests while already loading
     if (isLoading) return;
 
-    // Reset feedback state and previous quiz response
     setValidationError('');
     setQuiz(null);
     setApiError('');
 
-    // --- Client-side validation ---
     const trimmedTopic = topic.trim();
     if (!trimmedTopic) {
       setValidationError('Please enter a quiz topic before submitting.');
@@ -54,7 +46,6 @@ function App() {
       return;
     }
 
-    // --- API request delegated to quizApi service ---
     setIsLoading(true);
 
     try {
@@ -74,14 +65,12 @@ function App() {
   return (
     <main className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center p-3 sm:p-4">
       <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-5 sm:p-8 text-center break-words">
-        {/* Header */}
         <header className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400">
             AI Study Quiz
           </h1>
         </header>
 
-        {/* If quiz data is available, display interactive QuizView; otherwise display QuizForm */}
         {quiz ? (
           <QuizView
             quiz={quiz}

@@ -13,7 +13,6 @@ function QuizForm({
 }) {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5 text-left">
-      {/* Topic Input */}
       <div className="flex flex-col gap-2">
         <label
           htmlFor="topic-input"
@@ -32,20 +31,16 @@ function QuizForm({
         />
       </div>
 
-      {/* Difficulty Selector */}
       <DifficultySelector
         value={difficulty}
         onChange={onDifficultyChange}
         disabled={isLoading}
       />
 
-      {/* Client-side validation warning */}
       <StatusAlert type="warning" message={validationError} />
 
-      {/* Backend/network error message */}
       <StatusAlert type="error" message={apiError} />
 
-      {/* Submit Button */}
       <button
         type="submit"
         disabled={isLoading}

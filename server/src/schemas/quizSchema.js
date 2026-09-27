@@ -1,4 +1,3 @@
-// JSON Schema definition for quiz Structured Outputs
 export const quizSchema = {
   type: 'object',
   properties: {

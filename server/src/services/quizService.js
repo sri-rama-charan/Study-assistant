@@ -3,10 +3,8 @@ import dotenv from 'dotenv';
 import { quizSchema } from '../schemas/quizSchema.js';
 import { validateQuiz } from '../validators/quizValidator.js';
 
-// Ensure environment variables are loaded
 dotenv.config();
 
-// Initialize the Groq SDK client
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
@@ -19,7 +17,6 @@ const groq = new Groq({
  * @returns {Promise<object>} - Validated quiz object
  */
 async function executeQuizGeneration(topic, difficulty) {
-  // Prompt instructing Groq to return ONLY valid JSON matching the quiz contract with content-quality guidelines
   const prompt = `You are a quiz generator. Generate a study quiz about the topic "${topic}" at ${difficulty} difficulty.
 
 Follow these strict requirements:
@@ -72,7 +69,6 @@ Formatting rules:
 - Do not wrap the JSON in \`\`\`json code fences.
 - Do not include any text before or after the JSON.`;
 
-  // Call Groq API with Structured Outputs
   const chatCompletion = await groq.chat.completions.create({
     messages: [
       {
@@ -94,7 +90,6 @@ Formatting rules:
 
   const rawResponse = chatCompletion.choices[0]?.message?.content || '';
 
-  // Parse the raw JSON string from Groq into a JavaScript object
   let parsedQuiz;
   try {
     parsedQuiz = JSON.parse(rawResponse);
@@ -103,7 +98,6 @@ Formatting rules:
     throw new Error('AI returned invalid JSON');
   }
 
-  // Validate the parsed quiz using application-level validator
   if (!validateQuiz(parsedQuiz)) {
     console.error('AI returned an invalid quiz structure:', parsedQuiz);
     throw new Error('AI returned an invalid quiz structure');
@@ -128,7 +122,6 @@ export async function generateQuiz(topic, difficulty) {
       lastError = err;
       console.warn(`Groq quiz generation attempt ${attempt} failed:`, err.message?.slice(0, 150));
       if (attempt < 2) {
-        // Brief backoff before retrying
         await new Promise((resolve) => setTimeout(resolve, 400));
       }
     }

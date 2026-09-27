@@ -10,12 +10,10 @@
 export function sanitizeErrorMessage(error, responseStatus) {
   const status = responseStatus || error?.status;
 
-  // Rate limit / high demand
   if (status === 429) {
     return 'The quiz service is currently experiencing high demand. Please wait a moment and try again.';
   }
 
-  // Extract raw error text from various possible payload formats or Error instances
   let raw = '';
   if (typeof error === 'string') {
     raw = error;
@@ -29,7 +27,6 @@ export function sanitizeErrorMessage(error, responseStatus) {
 
   raw = raw.trim();
 
-  // If specific well-known friendly messages were thrown, preserve them directly
   if (
     raw === 'Unable to connect to the quiz service. Please check your connection and try again.' ||
     raw === 'The quiz response was incomplete. Please try again.' ||
@@ -38,7 +35,6 @@ export function sanitizeErrorMessage(error, responseStatus) {
     return raw;
   }
 
-  // Detect technical errors, raw JSON dumps, or schema validation messages
   const isTechnical =
     !raw ||
     raw.includes('failed_generation') ||

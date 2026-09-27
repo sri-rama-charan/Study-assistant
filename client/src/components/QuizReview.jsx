@@ -12,7 +12,6 @@ function QuizReview({ quiz, selectedAnswers, onBackToResult }) {
 
   return (
     <div className="flex flex-col text-left">
-      {/* Header with Title and Back to Result Button */}
       <div className="flex items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700 pb-3 mb-6">
         <div>
           <span className="text-xs font-semibold tracking-wider uppercase text-indigo-600 dark:text-indigo-400">
@@ -25,13 +24,12 @@ function QuizReview({ quiz, selectedAnswers, onBackToResult }) {
         <button
           type="button"
           onClick={onBackToResult}
-          className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 font-semibold text-xs sm:text-sm transition-colors cursor-pointer shrink-0"
+          className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-xs sm:text-sm transition-colors cursor-pointer shrink-0"
         >
           Back to Result
         </button>
       </div>
 
-      {/* Questions Review List */}
       <div className="flex flex-col gap-6">
         {questions.map((question, index) => {
           const userOptionId = selectedAnswers?.[question.id];
@@ -47,7 +45,6 @@ function QuizReview({ quiz, selectedAnswers, onBackToResult }) {
               key={question.id || index}
               className="p-4 sm:p-5 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80 shadow-xs flex flex-col gap-3.5"
             >
-              {/* Question Number and Status Badge */}
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                   Question {index + 1} of {questions.length}
@@ -64,12 +61,10 @@ function QuizReview({ quiz, selectedAnswers, onBackToResult }) {
                 )}
               </div>
 
-              {/* Question Text */}
               <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 leading-snug break-words">
                 {question.question}
               </h3>
 
-              {/* User Selected Answer */}
               <div className="text-sm">
                 <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 block mb-1">
                   Your Answer
@@ -92,7 +87,6 @@ function QuizReview({ quiz, selectedAnswers, onBackToResult }) {
                 </div>
               </div>
 
-              {/* Correct Answer (displayed if user was incorrect) */}
               {!isCorrect && (
                 <div className="text-sm">
                   <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 block mb-1">
@@ -111,13 +105,12 @@ function QuizReview({ quiz, selectedAnswers, onBackToResult }) {
                 </div>
               )}
 
-              {/* AI Explanation */}
               {question.explanation && (
-                <div className="mt-1 p-3.5 rounded-xl bg-gray-50 dark:bg-gray-750/60 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm text-gray-700 dark:text-gray-300 break-words">
-                  <span className="font-semibold text-gray-900 dark:text-gray-200 block mb-1">
+                <div className="mt-1 p-3.5 rounded-xl bg-gray-100 dark:bg-gray-900/80 border border-gray-200 dark:border-gray-700 text-xs sm:text-sm break-words">
+                  <span className="font-semibold text-gray-900 dark:text-gray-100 block mb-1">
                     Explanation
                   </span>
-                  <p className="leading-relaxed">{question.explanation}</p>
+                  <p className="leading-relaxed text-gray-700 dark:text-gray-300">{question.explanation}</p>
                 </div>
               )}
             </div>
@@ -125,7 +118,6 @@ function QuizReview({ quiz, selectedAnswers, onBackToResult }) {
         })}
       </div>
 
-      {/* Bottom Back to Result Button */}
       <div className="mt-8 flex justify-center">
         <button
           type="button"

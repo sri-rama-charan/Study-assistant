@@ -12,7 +12,6 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
   const totalQuestions = quiz?.questions?.length || 5;
   const percentage = Math.round((score / totalQuestions) * 100);
 
-  // Friendly feedback message based on performance
   const getFeedbackMessage = () => {
     if (score === totalQuestions) {
       return 'Outstanding! You achieved a perfect score!';
@@ -28,7 +27,6 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
 
   return (
     <div className="flex flex-col items-center text-center py-2">
-      {/* Quiz Title */}
       <span className="text-xs font-semibold tracking-wider uppercase text-indigo-600 dark:text-indigo-400 mb-1">
         Quiz Completed
       </span>
@@ -36,7 +34,6 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
         {quiz?.title || 'Study Quiz'}
       </h2>
 
-      {/* Score Badge Card */}
       <div className="w-full bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-2xl p-6 mb-6">
         <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
           Your Score
@@ -54,12 +51,10 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
         </p>
       </div>
 
-      {/* Feedback Message */}
       <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-8 max-w-sm leading-relaxed break-words">
         {getFeedbackMessage()}
       </p>
 
-      {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
         <button
           type="button"
@@ -71,7 +66,7 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
         <button
           type="button"
           onClick={onTryAgain}
-          className="w-full sm:w-auto sm:min-w-[160px] py-3 px-6 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 font-semibold text-sm transition-colors shadow-sm cursor-pointer"
+          className="w-full sm:w-auto sm:min-w-[160px] py-3 px-6 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-semibold text-sm transition-colors shadow-sm cursor-pointer"
         >
           Try Again
         </button>

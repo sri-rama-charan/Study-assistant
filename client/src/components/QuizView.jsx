@@ -28,12 +28,10 @@ function QuizView({ quiz, onReset }) {
     backToResult,
   } = useQuiz(quiz);
 
-  // Guard against missing or malformed quiz data
   if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
     return null;
   }
 
-  // If reviewing answers, show the review screen
   if (showReview) {
     return (
       <QuizReview
@@ -44,7 +42,6 @@ function QuizView({ quiz, onReset }) {
     );
   }
 
-  // If the user has completed the quiz, show the result screen
   if (showResult) {
     return (
       <QuizResult
@@ -57,14 +54,12 @@ function QuizView({ quiz, onReset }) {
     );
   }
 
-  // Guard if currentQuestion is not yet ready
   if (!currentQuestion) {
     return null;
   }
 
   return (
     <div className="flex flex-col text-left">
-      {/* Quiz Title & Header Meta */}
       <div className="flex items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
         <div>
           <span className="text-xs font-semibold tracking-wider uppercase text-indigo-600 dark:text-indigo-400">
@@ -85,19 +80,16 @@ function QuizView({ quiz, onReset }) {
         )}
       </div>
 
-      {/* Question Counter */}
       <div className="mb-2">
         <span className="inline-block px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
           Question {currentQuestionIndex + 1} of {totalQuestions}
         </span>
       </div>
 
-      {/* Question Text */}
       <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-5 leading-snug break-words">
         {currentQuestion.question}
       </h3>
 
-      {/* Answer Options */}
       <div className="flex flex-col gap-3">
         {currentQuestion.options.map((option) => {
           const isSelected = selectedAnswer === option.id;
@@ -107,25 +99,23 @@ function QuizView({ quiz, onReset }) {
               key={option.id}
               type="button"
               onClick={() => selectAnswer(option.id)}
-              className={`w-full flex items-start gap-3 p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+              className={`group w-full flex items-start gap-3 p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                 isSelected
-                  ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200 shadow-sm ring-2 ring-indigo-500/20'
-                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600'
+                  ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200 shadow-sm ring-2 ring-indigo-500/20 hover:bg-indigo-100/60 dark:hover:bg-indigo-900/60'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
               }`}
             >
-              {/* Option ID Badge */}
               <span
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 transition-colors ${
                   isSelected
                     ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                    : 'bg-gray-100 dark:bg-gray-700 group-hover:bg-gray-200 group-hover:dark:bg-gray-600 text-gray-600 dark:text-gray-300 group-hover:text-gray-800 group-hover:dark:text-white'
                 }`}
               >
                 {option.id.toUpperCase()}
               </span>
 
-              {/* Option Text */}
-              <span className="text-sm font-medium leading-relaxed break-words">
+              <span className="text-sm font-medium leading-relaxed break-words text-gray-800 dark:text-gray-200 group-hover:text-gray-900 group-hover:dark:text-white">
                 {option.text}
               </span>
             </button>
@@ -133,7 +123,6 @@ function QuizView({ quiz, onReset }) {
         })}
       </div>
 
-      {/* Navigation action button */}
       <div className="mt-6 flex justify-end">
         <button
           type="button"
