@@ -24,7 +24,7 @@ function StatusAlert({ type = 'warning', message }) {
       }`}
     >
       <span className="shrink-0">{icons[type] || 'ℹ️'}</span>
-      <span className="font-medium">{message}</span>
+      <span className="font-medium break-words">{message}</span>
     </div>
   );
 }

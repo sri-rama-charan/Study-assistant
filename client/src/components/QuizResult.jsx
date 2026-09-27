@@ -32,7 +32,7 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
       <span className="text-xs font-semibold tracking-wider uppercase text-indigo-600 dark:text-indigo-400 mb-1">
         Quiz Completed
       </span>
-      <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">
+      <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-6 break-words">
         {quiz?.title || 'Study Quiz'}
       </h2>
 
@@ -55,7 +55,7 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
       </div>
 
       {/* Feedback Message */}
-      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-8 max-w-sm leading-relaxed">
+      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-8 max-w-sm leading-relaxed break-words">
         {getFeedbackMessage()}
       </p>
 
@@ -64,14 +64,14 @@ function QuizResult({ quiz, score, selectedAnswers, onTryAgain, onReview }) {
         <button
           type="button"
           onClick={onReview}
-          className="w-full sm:w-auto min-w-[160px] py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm transition-colors shadow-sm cursor-pointer"
+          className="w-full sm:w-auto sm:min-w-[160px] py-3 px-6 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm transition-colors shadow-sm cursor-pointer"
         >
           Review Answers
         </button>
         <button
           type="button"
           onClick={onTryAgain}
-          className="w-full sm:w-auto min-w-[160px] py-3 px-6 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 font-semibold text-sm transition-colors shadow-sm cursor-pointer"
+          className="w-full sm:w-auto sm:min-w-[160px] py-3 px-6 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 font-semibold text-sm transition-colors shadow-sm cursor-pointer"
         >
           Try Again
         </button>

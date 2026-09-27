@@ -44,9 +44,26 @@ export async function generateQuizController(req, res) {
     });
   } catch (error) {
     console.error('Quiz generation error:', error);
+
+    let clientError = 'Failed to generate quiz from AI. Please try again.';
+    const errMsg = typeof error?.message === 'string' ? error.message : '';
+
+    if (
+      errMsg.includes('json_validate_failed') ||
+      errMsg.includes('jsonschema') ||
+      errMsg.includes('invalid quiz structure') ||
+      errMsg.includes('failed_generation')
+    ) {
+      clientError = 'The AI was unable to generate a valid quiz for this topic. Please try again or rephrase.';
+    } else if (errMsg.includes('rate_limit') || errMsg.includes('429')) {
+      clientError = 'The AI service is currently busy. Please wait a moment and try again.';
+    } else if (errMsg && !errMsg.includes('{') && !errMsg.includes('\n') && errMsg.length < 150) {
+      clientError = errMsg;
+    }
+
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to generate quiz from Groq',
+      error: clientError,
     });
   }
 }

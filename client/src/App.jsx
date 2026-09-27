@@ -1,8 +1,58 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QuizForm from './components/QuizForm';
 import QuizView from './components/QuizView';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const QUIZ_STORAGE_KEY = 'study_quiz_data';
+const PROGRESS_STORAGE_KEY = 'study_quiz_progress';
+
+/**
+ * Normalizes backend and network errors into clean, friendly user-facing messages.
+ * Prevents raw technical stack traces, JSON schema dumps, or Groq API internals
+ * from leaking into the UI.
+ *
+ * @param {object} data - Parsed response payload from the backend
+ * @param {number} responseStatus - HTTP status code
+ * @returns {string} - Clean, human-readable error message
+ */
+function sanitizeErrorMessage(data, responseStatus) {
+  if (responseStatus === 429) {
+    return 'The quiz service is currently experiencing high demand. Please wait a moment and try again.';
+  }
+
+  // Extract raw error text from various possible payload formats
+  let raw = '';
+  if (typeof data?.error === 'string') {
+    raw = data.error;
+  } else if (typeof data?.error?.message === 'string') {
+    raw = data.error.message;
+  } else if (typeof data?.message === 'string') {
+    raw = data.message;
+  }
+
+  raw = raw.trim();
+
+  // Detect technical errors, raw JSON dumps, or schema validation messages
+  const isTechnical =
+    !raw ||
+    raw.includes('failed_generation') ||
+    raw.includes('json_validate_failed') ||
+    raw.includes('jsonschema') ||
+    raw.includes('does not validate') ||
+    raw.includes('invalid_request_error') ||
+    raw.includes('openai/') ||
+    raw.includes('groq') ||
+    raw.startsWith('400 {') ||
+    raw.startsWith('500 {') ||
+    raw.startsWith('{') ||
+    raw.length > 200;
+
+  if (isTechnical) {
+    return 'Something went wrong while generating the quiz. Please try again or rephrase your topic.';
+  }
+
+  return raw;
+}
 
 function App() {
   // Input state
@@ -12,8 +62,32 @@ function App() {
   // UI / Network state
   const [validationError, setValidationError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiResponse, setApiResponse] = useState(null);
+
+  // Initialize apiResponse from localStorage if present to survive page reload
+  const [apiResponse, setApiResponse] = useState(() => {
+    try {
+      const saved = localStorage.getItem(QUIZ_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [apiError, setApiError] = useState('');
+
+  // Synchronize apiResponse with localStorage
+  useEffect(() => {
+    try {
+      if (apiResponse) {
+        localStorage.setItem(QUIZ_STORAGE_KEY, JSON.stringify(apiResponse));
+      } else {
+        localStorage.removeItem(QUIZ_STORAGE_KEY);
+        localStorage.removeItem(PROGRESS_STORAGE_KEY);
+      }
+    } catch {
+      // Ignore localStorage exceptions
+    }
+  }, [apiResponse]);
 
   // Handle topic change and clear validation warning if any
   const handleTopicChange = (newTopic) => {
@@ -27,6 +101,10 @@ function App() {
     setTopic('');
     setApiError('');
     setValidationError('');
+    try {
+      localStorage.removeItem(QUIZ_STORAGE_KEY);
+      localStorage.removeItem(PROGRESS_STORAGE_KEY);
+    } catch {}
   };
 
   // Handle form submission
@@ -90,11 +168,7 @@ function App() {
 
       // Handle unsuccessful HTTP response or failed status from backend
       if (!response.ok || data?.success === false) {
-        const errorMessage =
-          typeof data?.error === 'string' && data.error.trim()
-            ? data.error.trim()
-            : 'Something went wrong while generating the quiz. Please try again.';
-        setApiError(errorMessage);
+        setApiError(sanitizeErrorMessage(data, response.status));
         return;
       }
 
@@ -124,8 +198,8 @@ function App() {
   const quizData = apiResponse?.quiz || (apiResponse?.questions ? apiResponse : null);
 
   return (
-    <main className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center p-3 sm:p-4">
+      <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-5 sm:p-8 text-center break-words">
         {/* Header */}
         <header className="mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold text-indigo-600 dark:text-indigo-400">

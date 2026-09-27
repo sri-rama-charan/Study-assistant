@@ -18,7 +18,7 @@ const groq = new Groq({
  * @param {string} difficulty - Difficulty level ("easy", "medium", or "hard")
  * @returns {Promise<object>} - Validated quiz object
  */
-export async function generateQuiz(topic, difficulty) {
+async function executeQuizGeneration(topic, difficulty) {
   // Prompt instructing Groq to return ONLY valid JSON matching the quiz contract with content-quality guidelines
   const prompt = `You are a quiz generator. Generate a study quiz about the topic "${topic}" at ${difficulty} difficulty.
 
@@ -65,6 +65,8 @@ Content Quality Rules:
   * all questions are relevant to the requested topic and difficulty
 
 Formatting rules:
+- Return ONLY a single root JSON object starting with { and ending with }, NEVER a JSON array starting with [.
+- Do not enclose the root object in square brackets.
 - Return ONLY JSON.
 - Do not use Markdown.
 - Do not wrap the JSON in \`\`\`json code fences.
@@ -108,4 +110,28 @@ Formatting rules:
   }
 
   return parsedQuiz;
+}
+
+/**
+ * Generates a quiz with an automatic single retry in case of transient AI schema errors.
+ *
+ * @param {string} topic
+ * @param {string} difficulty
+ * @returns {Promise<object>}
+ */
+export async function generateQuiz(topic, difficulty) {
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await executeQuizGeneration(topic, difficulty);
+    } catch (err) {
+      lastError = err;
+      console.warn(`Groq quiz generation attempt ${attempt} failed:`, err.message?.slice(0, 150));
+      if (attempt < 2) {
+        // Brief backoff before retrying
+        await new Promise((resolve) => setTimeout(resolve, 400));
+      }
+    }
+  }
+  throw lastError;
 }

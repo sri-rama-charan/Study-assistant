@@ -1,6 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import QuizResult from './QuizResult';
 import QuizReview from './QuizReview';
+
+const PROGRESS_STORAGE_KEY = 'study_quiz_progress';
+
+function getStoredProgress(quizTitle) {
+  try {
+    const raw = localStorage.getItem(PROGRESS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.quizTitle === quizTitle) {
+      return parsed;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Interactive Quiz View component with sequential question navigation, scoring,
@@ -12,15 +28,53 @@ import QuizReview from './QuizReview';
  */
 function QuizView({ quiz, onReset }) {
   // Navigation state tracking the index of the active question (0 to 4)
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
+    const saved = getStoredProgress(quiz?.title);
+    return typeof saved?.currentQuestionIndex === 'number' ? saved.currentQuestionIndex : 0;
+  });
 
   // Map of questionId -> selectedOptionId, e.g. { q1: "a", q2: "c" }
-  const [selectedAnswers, setSelectedAnswers] = useState({});
+  const [selectedAnswers, setSelectedAnswers] = useState(() => {
+    const saved = getStoredProgress(quiz?.title);
+    return saved?.selectedAnswers && typeof saved.selectedAnswers === 'object'
+      ? saved.selectedAnswers
+      : {};
+  });
 
   // Result and review display states
-  const [showResult, setShowResult] = useState(false);
-  const [showReview, setShowReview] = useState(false);
-  const [score, setScore] = useState(0);
+  const [showResult, setShowResult] = useState(() => {
+    const saved = getStoredProgress(quiz?.title);
+    return Boolean(saved?.showResult);
+  });
+
+  const [showReview, setShowReview] = useState(() => {
+    const saved = getStoredProgress(quiz?.title);
+    return Boolean(saved?.showReview);
+  });
+
+  const [score, setScore] = useState(() => {
+    const saved = getStoredProgress(quiz?.title);
+    return typeof saved?.score === 'number' ? saved.score : 0;
+  });
+
+  // Persist current quiz progress to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        PROGRESS_STORAGE_KEY,
+        JSON.stringify({
+          quizTitle: quiz?.title,
+          currentQuestionIndex,
+          selectedAnswers,
+          showResult,
+          showReview,
+          score,
+        })
+      );
+    } catch {
+      // Ignore localStorage write exceptions
+    }
+  }, [quiz?.title, currentQuestionIndex, selectedAnswers, showResult, showReview, score]);
 
   // Guard against missing or malformed quiz data
   if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
@@ -34,6 +88,9 @@ function QuizView({ quiz, onReset }) {
     setScore(0);
     setShowResult(false);
     setShowReview(false);
+    try {
+      localStorage.removeItem(PROGRESS_STORAGE_KEY);
+    } catch {}
   };
 
   // If reviewing answers, show the review screen
@@ -95,12 +152,12 @@ function QuizView({ quiz, onReset }) {
   return (
     <div className="flex flex-col text-left">
       {/* Quiz Title & Header Meta */}
-      <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
+      <div className="flex items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-700 pb-3 mb-4">
         <div>
           <span className="text-xs font-semibold tracking-wider uppercase text-indigo-600 dark:text-indigo-400">
             Active Quiz
           </span>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+          <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words">
             {quiz.title}
           </h2>
         </div>
@@ -108,7 +165,7 @@ function QuizView({ quiz, onReset }) {
           <button
             type="button"
             onClick={onReset}
-            className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline cursor-pointer"
+            className="text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 underline cursor-pointer shrink-0"
           >
             New Quiz
           </button>
@@ -123,7 +180,7 @@ function QuizView({ quiz, onReset }) {
       </div>
 
       {/* Question Text */}
-      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-5 leading-snug">
+      <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-5 leading-snug break-words">
         {currentQuestion.question}
       </h3>
 
@@ -137,7 +194,7 @@ function QuizView({ quiz, onReset }) {
               key={option.id}
               type="button"
               onClick={() => handleSelectOption(option.id)}
-              className={`w-full flex items-center gap-3.5 p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+              className={`w-full flex items-start gap-3 p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                 isSelected
                   ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200 shadow-sm ring-2 ring-indigo-500/20'
                   : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/80 text-gray-800 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-750 hover:border-gray-300 dark:hover:border-gray-600'
@@ -145,7 +202,7 @@ function QuizView({ quiz, onReset }) {
             >
               {/* Option ID Badge */}
               <span
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5 transition-colors ${
                   isSelected
                     ? 'bg-indigo-600 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
@@ -155,7 +212,7 @@ function QuizView({ quiz, onReset }) {
               </span>
 
               {/* Option Text */}
-              <span className="text-sm font-medium leading-relaxed">
+              <span className="text-sm font-medium leading-relaxed break-words">
                 {option.text}
               </span>
             </button>
