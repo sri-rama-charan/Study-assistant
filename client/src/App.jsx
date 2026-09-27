@@ -12,7 +12,7 @@ function App() {
   // UI / Network state
   const [validationError, setValidationError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiResponse, setApiResponse] = useState(null);
+  const [quiz, setQuiz] = useState(null);
   const [apiError, setApiError] = useState('');
 
   // Handle topic change and clear validation warning if any
@@ -23,7 +23,7 @@ function App() {
 
   // Reset all state to start a new quiz
   const handleReset = () => {
-    setApiResponse(null);
+    setQuiz(null);
     setTopic('');
     setApiError('');
     setValidationError('');
@@ -38,7 +38,7 @@ function App() {
 
     // Reset feedback state and previous quiz response
     setValidationError('');
-    setApiResponse(null);
+    setQuiz(null);
     setApiError('');
 
     // --- Client-side validation ---
@@ -63,16 +63,13 @@ function App() {
         difficulty: difficulty.toLowerCase(),
       });
 
-      setApiResponse(data);
+      setQuiz(data.quiz);
     } catch (err) {
       setApiError(sanitizeErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Resolve quiz data whether nested under .quiz or returned directly
-  const quizData = apiResponse?.quiz || (apiResponse?.questions ? apiResponse : null);
 
   return (
     <main className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center p-3 sm:p-4">
@@ -85,9 +82,9 @@ function App() {
         </header>
 
         {/* If quiz data is available, display interactive QuizView; otherwise display QuizForm */}
-        {quizData ? (
+        {quiz ? (
           <QuizView
-            quiz={quizData}
+            quiz={quiz}
             onReset={handleReset}
           />
         ) : (

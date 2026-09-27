@@ -28,38 +28,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-/**
- * Expected Target Quiz Response Structure (Contract for upcoming steps):
- *
- * {
- *   "title": "JavaScript Closures",
- *   "questions": [
- *     {
- *       "id": "q1",
- *       "question": "What is a closure?",
- *       "options": [
- *         { "id": "a", "text": "..." },
- *         { "id": "b", "text": "..." },
- *         { "id": "c", "text": "..." },
- *         { "id": "d", "text": "..." }
- *       ],
- *       "correctAnswer": "a",
- *       "explanation": "..."
- *     }
- *   ]
- * }
- *
- * Rules:
- * - title: non-empty string
- * - questions: exactly 5 questions
- * - each question has id, question, options, correctAnswer, explanation
- * - exactly 4 options per question
- * - each option has id and text
- * - option IDs must be unique within a question
- * - correctAnswer must match one option ID
- * - explanation must be a non-empty string
- */
-
 // Quiz generation endpoint
 app.post('/api/generate-quiz', generateQuizController);
 
