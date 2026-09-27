@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import QuizForm from './components/QuizForm';
-import ResponsePreview from './components/ResponsePreview';
+import QuizView from './components/QuizView';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -19,6 +19,14 @@ function App() {
   const handleTopicChange = (newTopic) => {
     setTopic(newTopic);
     if (validationError) setValidationError('');
+  };
+
+  // Reset all state to start a new quiz
+  const handleReset = () => {
+    setApiResponse(null);
+    setTopic('');
+    setApiError('');
+    setValidationError('');
   };
 
   // Handle form submission
@@ -74,6 +82,9 @@ function App() {
     }
   };
 
+  // Resolve quiz data whether nested under .quiz or returned directly
+  const quizData = apiResponse?.quiz || (apiResponse?.questions ? apiResponse : null);
+
   return (
     <main className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex items-center justify-center p-4">
       <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 text-center">
@@ -84,20 +95,24 @@ function App() {
           </h1>
         </header>
 
-        {/* Quiz Form Component */}
-        <QuizForm
-          topic={topic}
-          onTopicChange={handleTopicChange}
-          difficulty={difficulty}
-          onDifficultyChange={setDifficulty}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          validationError={validationError}
-          apiError={apiError}
-        />
-
-        {/* Backend Response Preview Component */}
-        <ResponsePreview response={apiResponse} />
+        {/* If quiz data is available, display interactive QuizView; otherwise display QuizForm */}
+        {quizData ? (
+          <QuizView
+            quiz={quizData}
+            onReset={handleReset}
+          />
+        ) : (
+          <QuizForm
+            topic={topic}
+            onTopicChange={handleTopicChange}
+            difficulty={difficulty}
+            onDifficultyChange={setDifficulty}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            validationError={validationError}
+            apiError={apiError}
+          />
+        )}
       </div>
     </main>
   );
