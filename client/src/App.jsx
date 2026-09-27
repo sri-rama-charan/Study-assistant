@@ -33,7 +33,10 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Reset feedback state
+    // Prevent multiple requests while already loading
+    if (isLoading) return;
+
+    // Reset feedback state and previous quiz response
     setValidationError('');
     setApiResponse(null);
     setApiError('');
@@ -55,28 +58,63 @@ function App() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/generate-quiz`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic: trimmedTopic,
-          difficulty: difficulty.toLowerCase(),
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Server rejected the request');
+      let response;
+      try {
+        response = await fetch(`${API_BASE_URL}/api/generate-quiz`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            topic: trimmedTopic,
+            difficulty: difficulty.toLowerCase(),
+          }),
+        });
+      } catch {
+        // Network failure, browser timeout, or unreachable backend
+        setApiError(
+          'Unable to connect to the quiz service. Please check your connection and try again.'
+        );
+        return;
       }
 
+      // Try parsing response as JSON
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Response is not valid JSON
+        setApiError('Something went wrong while generating the quiz. Please try again.');
+        return;
+      }
+
+      // Handle unsuccessful HTTP response or failed status from backend
+      if (!response.ok || data?.success === false) {
+        const errorMessage =
+          typeof data?.error === 'string' && data.error.trim()
+            ? data.error.trim()
+            : 'Something went wrong while generating the quiz. Please try again.';
+        setApiError(errorMessage);
+        return;
+      }
+
+      // Validate that the successful response contains a usable quiz object
+      const quizData = data?.quiz || (data?.questions ? data : null);
+      if (
+        !quizData ||
+        typeof quizData !== 'object' ||
+        !Array.isArray(quizData.questions) ||
+        quizData.questions.length === 0
+      ) {
+        setApiError('The quiz response was incomplete. Please try again.');
+        return;
+      }
+
+      // Save successful response
       setApiResponse(data);
-    } catch (err) {
-      setApiError(
-        err.message || 'Unable to connect to the backend server. Is it running on port 5000?'
-      );
+    } catch {
+      // General fallback to prevent crashing the React app
+      setApiError('Something went wrong while generating the quiz. Please try again.');
     } finally {
       setIsLoading(false);
     }
