@@ -1,22 +1,6 @@
-import { useState, useEffect } from 'react';
 import QuizResult from './QuizResult';
 import QuizReview from './QuizReview';
-
-const PROGRESS_STORAGE_KEY = 'study_quiz_progress';
-
-function getStoredProgress(quizTitle) {
-  try {
-    const raw = localStorage.getItem(PROGRESS_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (parsed && parsed.quizTitle === quizTitle) {
-      return parsed;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+import { useQuiz } from '../hooks/useQuiz';
 
 /**
  * Interactive Quiz View component with sequential question navigation, scoring,
@@ -27,71 +11,27 @@ function getStoredProgress(quizTitle) {
  * @param {function} [props.onReset] - Optional callback to reset and start a new quiz
  */
 function QuizView({ quiz, onReset }) {
-  // Navigation state tracking the index of the active question (0 to 4)
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
-    const saved = getStoredProgress(quiz?.title);
-    return typeof saved?.currentQuestionIndex === 'number' ? saved.currentQuestionIndex : 0;
-  });
-
-  // Map of questionId -> selectedOptionId, e.g. { q1: "a", q2: "c" }
-  const [selectedAnswers, setSelectedAnswers] = useState(() => {
-    const saved = getStoredProgress(quiz?.title);
-    return saved?.selectedAnswers && typeof saved.selectedAnswers === 'object'
-      ? saved.selectedAnswers
-      : {};
-  });
-
-  // Result and review display states
-  const [showResult, setShowResult] = useState(() => {
-    const saved = getStoredProgress(quiz?.title);
-    return Boolean(saved?.showResult);
-  });
-
-  const [showReview, setShowReview] = useState(() => {
-    const saved = getStoredProgress(quiz?.title);
-    return Boolean(saved?.showReview);
-  });
-
-  const [score, setScore] = useState(() => {
-    const saved = getStoredProgress(quiz?.title);
-    return typeof saved?.score === 'number' ? saved.score : 0;
-  });
-
-  // Persist current quiz progress to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        PROGRESS_STORAGE_KEY,
-        JSON.stringify({
-          quizTitle: quiz?.title,
-          currentQuestionIndex,
-          selectedAnswers,
-          showResult,
-          showReview,
-          score,
-        })
-      );
-    } catch {
-      // Ignore localStorage write exceptions
-    }
-  }, [quiz?.title, currentQuestionIndex, selectedAnswers, showResult, showReview, score]);
+  const {
+    currentQuestion,
+    currentQuestionIndex,
+    totalQuestions,
+    selectedAnswer,
+    selectedAnswers,
+    isLastQuestion,
+    showResult,
+    showReview,
+    score,
+    selectAnswer,
+    nextQuestion,
+    tryAgain,
+    openReview,
+    backToResult,
+  } = useQuiz(quiz);
 
   // Guard against missing or malformed quiz data
   if (!quiz || !Array.isArray(quiz.questions) || quiz.questions.length === 0) {
     return null;
   }
-
-  // Handle resetting the quiz state to start over
-  const handleTryAgain = () => {
-    setCurrentQuestionIndex(0);
-    setSelectedAnswers({});
-    setScore(0);
-    setShowResult(false);
-    setShowReview(false);
-    try {
-      localStorage.removeItem(PROGRESS_STORAGE_KEY);
-    } catch {}
-  };
 
   // If reviewing answers, show the review screen
   if (showReview) {
@@ -99,7 +39,7 @@ function QuizView({ quiz, onReset }) {
       <QuizReview
         quiz={quiz}
         selectedAnswers={selectedAnswers}
-        onBackToResult={() => setShowReview(false)}
+        onBackToResult={backToResult}
       />
     );
   }
@@ -111,43 +51,16 @@ function QuizView({ quiz, onReset }) {
         quiz={quiz}
         score={score}
         selectedAnswers={selectedAnswers}
-        onTryAgain={handleTryAgain}
-        onReview={() => setShowReview(true)}
+        onTryAgain={tryAgain}
+        onReview={openReview}
       />
     );
   }
 
-  const currentQuestion = quiz.questions[currentQuestionIndex];
-  const totalQuestions = quiz.questions.length;
-  const isLastQuestion = currentQuestionIndex === totalQuestions - 1;
-
-  // Retrieve the selected answer for the currently displayed question
-  const selectedAnswer = selectedAnswers[currentQuestion.id] || null;
-
-  // Handle option selection for the current question
-  const handleSelectOption = (optionId) => {
-    setSelectedAnswers((prev) => ({
-      ...prev,
-      [currentQuestion.id]: optionId,
-    }));
-  };
-
-  // Handle proceeding to the next question or finishing and calculating score
-  const handleNext = () => {
-    if (!selectedAnswer) return;
-
-    if (isLastQuestion) {
-      // Calculate total score by comparing selected answers with correct answers
-      const totalScore = quiz.questions.reduce((total, q) => {
-        return total + (selectedAnswers[q.id] === q.correctAnswer ? 1 : 0);
-      }, 0);
-
-      setScore(totalScore);
-      setShowResult(true);
-    } else {
-      setCurrentQuestionIndex((prev) => prev + 1);
-    }
-  };
+  // Guard if currentQuestion is not yet ready
+  if (!currentQuestion) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col text-left">
@@ -193,7 +106,7 @@ function QuizView({ quiz, onReset }) {
             <button
               key={option.id}
               type="button"
-              onClick={() => handleSelectOption(option.id)}
+              onClick={() => selectAnswer(option.id)}
               className={`w-full flex items-start gap-3 p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
                 isSelected
                   ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 dark:border-indigo-500 text-indigo-900 dark:text-indigo-200 shadow-sm ring-2 ring-indigo-500/20'
@@ -224,7 +137,7 @@ function QuizView({ quiz, onReset }) {
       <div className="mt-6 flex justify-end">
         <button
           type="button"
-          onClick={handleNext}
+          onClick={nextQuestion}
           disabled={!selectedAnswer}
           className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
